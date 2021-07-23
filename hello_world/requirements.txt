@@ -1,0 +1,5 @@
+requests
+google-api-python-client==2.13.0
+google-auth==1.33.0
+boto3==1.18.5
+
