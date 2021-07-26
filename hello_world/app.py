@@ -1,7 +1,6 @@
 import json
 
 import csv
-import os
 
 import boto3 as boto3
 from googleapiclient.discovery import build
@@ -37,7 +36,7 @@ def lambda_handler(event, context):
     request = service.files().get_media(fileId=target_id)
 
     # ダウンロードする必要ない気がしてきた。そのままストリーム処理してしまえば良いか
-    with open(os.path.join('.', 'tmp'), 'wb') as f1:
+    with open('/tmp/temp_file', 'wb') as f1:
         filename = f1.name
         downloader = MediaIoBaseDownload(f1, request)
         done = False
