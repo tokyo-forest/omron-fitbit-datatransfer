@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import csv
@@ -24,6 +25,7 @@ def lambda_handler(event, context):
     ).execute()
     items = results.get('files', [])
 
+    target_id = None
     if not items:
         print('No files found.')
         return
@@ -35,7 +37,6 @@ def lambda_handler(event, context):
 
     request = service.files().get_media(fileId=target_id)
 
-    # ダウンロードする必要ない気がしてきた。そのままストリーム処理してしまえば良いか
     with open('/tmp/temp_file', 'wb') as f1:
         filename = f1.name
         downloader = MediaIoBaseDownload(f1, request)
@@ -50,8 +51,11 @@ def lambda_handler(event, context):
         next(reader)
 
         for row in reader:
-            register_weight(row[0], row[2])
-            register_fat(row[0], row[3])
+            day, time = convert_date(row[0])
+            register_weight(day, time, row[2])
+            register_fat(day, time, row[3])
+
+    access_token = get_parameters("fitbit-access-token")
 
     return {
         "statusCode": 200,
@@ -74,9 +78,18 @@ def get_parameters(param_key):
     return response['Parameters'][0]['Value']
 
 
-def register_weight(date, weight):
-    print(date, weight)
+def register_weight(day, time, weight):
+    print(day, time, weight)
 
 
-def register_fat(date, fat):
-    print(date, fat)
+def register_fat(day, time, fat):
+    print(day, time, fat)
+
+
+def convert_date(org_date):
+    target_date_time = datetime.datetime.strptime(org_date, "%Y/%m/%d %H:%M")
+
+    day = target_date_time.strftime("%Y-%m-%d")
+    time = target_date_time.strftime("%H:%M")
+
+    return day, time
