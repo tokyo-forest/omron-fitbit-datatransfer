@@ -45,7 +45,7 @@ Resources:
           Properties:
             Path: /hello
             Method: get
-      Timeout: 10
+      Timeout: 30
       Role: !GetAtt SSMRoleForHere.Arn
     Metadata:
       Dockerfile: Dockerfile
