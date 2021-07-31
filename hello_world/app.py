@@ -99,7 +99,6 @@ def convert_date(org_date):
     target_date_time = datetime.datetime.strptime(org_date, "%Y/%m/%d %H:%M")
 
     day = target_date_time.strftime("%Y-%m-%d")
-    time = target_date_time.strftime("%H:%M")
-    formatted_time = time + ':00'
+    time = target_date_time.strftime("%H:%M:%S")
 
-    return day, formatted_time
+    return day, time
