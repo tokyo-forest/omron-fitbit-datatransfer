@@ -4,6 +4,7 @@ import json
 import csv
 
 import boto3 as boto3
+import requests as requests
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
@@ -13,6 +14,7 @@ REGION = 'ap-northeast-1'
 
 def lambda_handler(event, context):
     param_value = get_parameters("google-drive-parameter")
+    access_token = get_parameters("fitbit-access-token")
 
     service_account_info = json.loads(param_value, strict=False)
     credentials = service_account.Credentials.from_service_account_info(service_account_info)
@@ -52,10 +54,8 @@ def lambda_handler(event, context):
 
         for row in reader:
             day, time = convert_date(row[0])
-            register_weight(day, time, row[2])
-            register_fat(day, time, row[3])
-
-    access_token = get_parameters("fitbit-access-token")
+            register_weight(day, time, row[2], access_token)
+            register_fat(day, time, row[3], access_token)
 
     return {
         "statusCode": 200,
@@ -78,12 +78,21 @@ def get_parameters(param_key):
     return response['Parameters'][0]['Value']
 
 
-def register_weight(day, time, weight):
-    print(day, time, weight)
+def register_weight(day, time, weight, access_token):
+    payload = {'date': day, 'time': time, 'weight': weight}
+    headers = {'authorization': f'Bearer {access_token}'}
+    post_request(payload, headers, 'weight.json')
 
 
-def register_fat(day, time, fat):
-    print(day, time, fat)
+def register_fat(day, time, fat, access_token):
+    payload = {'date': day, 'time': time, 'fat': fat}
+    headers = {'authorization': f'Bearer {access_token}'}
+    post_request(payload, headers, 'fat.json')
+
+
+def post_request(payload, headers, endpoint):
+    response = requests.post(f'https://api.fitbit.com/1/user/-/body/log/{endpoint}', params=payload, headers=headers)
+    print(response.text)
 
 
 def convert_date(org_date):
@@ -91,5 +100,6 @@ def convert_date(org_date):
 
     day = target_date_time.strftime("%Y-%m-%d")
     time = target_date_time.strftime("%H:%M")
+    formatted_time = time + ':00'
 
-    return day, time
+    return day, formatted_time
