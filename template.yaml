@@ -45,6 +45,10 @@ Resources:
           Properties:
             Path: /hello
             Method: get
+        ScheduledFunction:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
       Timeout: 60
       Role: !GetAtt SSMRoleForHere.Arn
     Metadata:
