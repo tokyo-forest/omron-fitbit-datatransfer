@@ -57,7 +57,7 @@ def lambda_handler(event, context):
             register_weight(day, time, row[2], access_token)
             register_fat(day, time, row[3], access_token)
 
-    file = {'name': 'trash'}
+    file = {'name': datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}
     service.files().update(fileId=target_id, body=file).execute()
 
     return {
