@@ -57,6 +57,8 @@ def lambda_handler(event, context):
             register_weight(day, time, row[2], access_token)
             register_fat(day, time, row[3], access_token)
 
+    service.files().delete(fileId=target_id).execute()
+
     return {
         "statusCode": 200,
         "body": json.dumps(
