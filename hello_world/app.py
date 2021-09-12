@@ -96,6 +96,7 @@ def register_fat(day, time, fat, access_token):
 def post_request(payload, headers, endpoint):
     response = requests.post(f'https://api.fitbit.com/1/user/-/body/log/{endpoint}', params=payload, headers=headers)
     print(response.text)
+    response.raise_for_status()
 
 
 def convert_date(org_date):
