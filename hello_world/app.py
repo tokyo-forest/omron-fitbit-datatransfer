@@ -2,6 +2,7 @@ import datetime
 import json
 
 import csv
+import urllib.parse
 
 import boto3 as boto3
 import requests as requests
@@ -14,7 +15,8 @@ REGION = 'ap-northeast-1'
 
 def lambda_handler(event, context):
     param_value = get_parameters("google-drive-parameter")
-    access_token = get_parameters("fitbit-access-token")
+    refresh_token = get_parameters("fitbit-refresh-token")
+    client_secret = get_parameters("fitbit-client-secret")
 
     service_account_info = json.loads(param_value, strict=False)
     credentials = service_account.Credentials.from_service_account_info(service_account_info)
@@ -48,6 +50,9 @@ def lambda_handler(event, context):
             print("Download %d%%." % int(status.progress() * 100))
 
     print(filename)
+
+    access_token = refresh_access_token(client_secret, refresh_token)
+
     with open(filename, 'r') as f2:
         reader = csv.reader(f2)
         next(reader)
@@ -84,19 +89,35 @@ def get_parameters(param_key):
 def register_weight(day, time, weight, access_token):
     payload = {'date': day, 'time': time, 'weight': weight}
     headers = {'authorization': f'Bearer {access_token}'}
-    post_request(payload, headers, 'weight.json')
+    post_request(payload=payload, headers=headers, endpoint='https://api.fitbit.com/1/user/-/body/log/weight.json',
+                 body=None)
 
 
 def register_fat(day, time, fat, access_token):
     payload = {'date': day, 'time': time, 'fat': fat}
     headers = {'authorization': f'Bearer {access_token}'}
-    post_request(payload, headers, 'fat.json')
+    post_request(payload=payload, headers=headers, endpoint='https://api.fitbit.com/1/user/-/body/log/fat.json',
+                 body=None)
 
 
-def post_request(payload, headers, endpoint):
-    response = requests.post(f'https://api.fitbit.com/1/user/-/body/log/{endpoint}', params=payload, headers=headers)
+def refresh_access_token(client_secret, refresh_token):
+    headers = {'authorization': f'Basic {client_secret}', 'Content-Type': 'application/x-www-form-urlencoded'}
+    body = {'grant_type': 'refresh_token', 'refresh_token': f'{refresh_token}'}
+    body_data = urllib.parse.urlencode(body)
+    response = post_request(payload=None, headers=headers, endpoint='https://api.fitbit.com/oauth2/token',
+                            body=body_data)
+
+    print(response)
+
+    print(response.json()["access_token"])
+    return response.json()["access_token"]
+
+
+def post_request(payload, headers, endpoint, body):
+    response = requests.post(endpoint, params=payload, headers=headers, data=body)
     print(response.text)
     response.raise_for_status()
+    return response
 
 
 def convert_date(org_date):
