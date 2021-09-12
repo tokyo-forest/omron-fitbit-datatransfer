@@ -12,14 +12,12 @@ from google.oauth2 import service_account
 from slack_sdk.webhook import WebhookClient
 
 REGION = 'ap-northeast-1'
-url = 'https://hooks.slack.com/services/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'
+url = 'https://hooks.slack.com/services/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'
 webhook = WebhookClient(url)
 
 
 def lambda_handler(event, context):
-    webhook_start_response = webhook.send(text="omron-fitbit-datatran started")
-    assert webhook_start_response.status_code == 200
-    assert webhook_start_response.body == 'ok'
+    webhook.send(text="omron-fitbit-datatran started")
 
     param_value = get_parameters("google-drive-parameter")
     refresh_token = get_parameters("fitbit-refresh-token")
@@ -95,6 +93,16 @@ def get_parameters(param_key):
     return response['Parameters'][0]['Value']
 
 
+def put_parameters(refresh_token):
+    ssm = boto3.client('ssm', region_name=REGION)
+    ssm.put_parameter(
+        Name='fitbit-refresh-token',
+        Value=refresh_token,
+        Type='SecureString',
+        Overwrite=True
+    )
+
+
 def register_weight(day, time, weight, access_token):
     payload = {'date': day, 'time': time, 'weight': weight}
     headers = {'authorization': f'Bearer {access_token}'}
@@ -118,7 +126,8 @@ def refresh_access_token(client_secret, refresh_token):
 
     print(response)
 
-    print(response.json()["access_token"])
+    put_parameters(response.json()["refresh_token"])
+
     return response.json()["access_token"]
 
 
