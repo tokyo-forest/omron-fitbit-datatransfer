@@ -12,7 +12,7 @@ from google.oauth2 import service_account
 from slack_sdk.webhook import WebhookClient
 
 REGION = 'ap-northeast-1'
-url = 'https://hooks.slack.com/services/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'
+url = 'https://hooks.slack.com/services/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'
 webhook = WebhookClient(url)
 
 
