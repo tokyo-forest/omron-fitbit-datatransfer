@@ -12,7 +12,7 @@ from google.oauth2 import service_account
 from slack_sdk.webhook import WebhookClient
 
 REGION = 'ap-northeast-1'
-url = 'https://hooks.slack.com/services/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'
+url = 'https://hooks.slack.com/services/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'
 webhook = WebhookClient(url)
 
 
@@ -39,6 +39,7 @@ def lambda_handler(event, context):
     target_id = None
     if not items:
         print('No files found.')
+        webhook.send(text="no data")
         return
     else:
         print('Files:')
@@ -72,9 +73,7 @@ def lambda_handler(event, context):
     file = {'name': datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}
     service.files().update(fileId=target_id, body=file).execute()
 
-    webhook_start_response = webhook.send(text="omron-fitbit-datatran finished successfully!!")
-    assert webhook_start_response.status_code == 200
-    assert webhook_start_response.body == 'ok'
+    webhook.send(text="omron-fitbit-datatran finished successfully!!")
     return {
         "statusCode": 200,
         "body": json.dumps(
@@ -129,9 +128,7 @@ def post_request(payload, headers, endpoint, body):
     try:
         response.raise_for_status()
     except Exception:
-        webhook_start_response = webhook.send(text="omron-fitbit-datatran failed!!")
-        assert webhook_start_response.status_code == 200
-        assert webhook_start_response.body == 'ok'
+        webhook.send(text="omron-fitbit-datatran failed!!")
         raise
 
     return response
