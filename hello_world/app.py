@@ -9,11 +9,18 @@ import requests as requests
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
+from slack_sdk.webhook import WebhookClient
 
 REGION = 'ap-northeast-1'
+url = 'https://hooks.slack.com/services/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'
+webhook = WebhookClient(url)
 
 
 def lambda_handler(event, context):
+    webhook_start_response = webhook.send(text="omron-fitbit-datatran started")
+    assert webhook_start_response.status_code == 200
+    assert webhook_start_response.body == 'ok'
+
     param_value = get_parameters("google-drive-parameter")
     refresh_token = get_parameters("fitbit-refresh-token")
     client_secret = get_parameters("fitbit-client-secret")
@@ -65,6 +72,9 @@ def lambda_handler(event, context):
     file = {'name': datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}
     service.files().update(fileId=target_id, body=file).execute()
 
+    webhook_start_response = webhook.send(text="omron-fitbit-datatran finished successfully!!")
+    assert webhook_start_response.status_code == 200
+    assert webhook_start_response.body == 'ok'
     return {
         "statusCode": 200,
         "body": json.dumps(
@@ -116,7 +126,14 @@ def refresh_access_token(client_secret, refresh_token):
 def post_request(payload, headers, endpoint, body):
     response = requests.post(endpoint, params=payload, headers=headers, data=body)
     print(response.text)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception:
+        webhook_start_response = webhook.send(text="omron-fitbit-datatran failed!!")
+        assert webhook_start_response.status_code == 200
+        assert webhook_start_response.body == 'ok'
+        raise
+
     return response
 
 
