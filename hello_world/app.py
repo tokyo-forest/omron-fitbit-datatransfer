@@ -12,16 +12,18 @@ from google.oauth2 import service_account
 from slack_sdk.webhook import WebhookClient
 
 REGION = 'ap-northeast-1'
-url = 'https://hooks.slack.com/services/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'
-webhook = WebhookClient(url)
+webhook: WebhookClient
 
 
 def lambda_handler(event, context):
-    webhook.send(text="omron-fitbit-datatran started")
-
     param_value = get_parameters("google-drive-parameter")
     refresh_token = get_parameters("fitbit-refresh-token")
     client_secret = get_parameters("fitbit-client-secret")
+    slack_webhook_url = get_parameters("slack-webhook-url")
+
+    global webhook
+    webhook = WebhookClient(slack_webhook_url)
+    webhook.send(text="omron-fitbit-datatran started")
 
     service_account_info = json.loads(param_value, strict=False)
     credentials = service_account.Credentials.from_service_account_info(service_account_info)
