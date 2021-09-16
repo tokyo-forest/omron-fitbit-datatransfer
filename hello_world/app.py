@@ -36,6 +36,8 @@ def lambda_handler(event, context):
     ).execute()
     items = results.get('files', [])
 
+    access_token = refresh_access_token(client_secret, refresh_token)
+
     target_id = None
     if not items:
         print('No files found.')
@@ -58,8 +60,6 @@ def lambda_handler(event, context):
             print("Download %d%%." % int(status.progress() * 100))
 
     print(filename)
-
-    access_token = refresh_access_token(client_secret, refresh_token)
 
     with open(filename, 'r') as f2:
         reader = csv.reader(f2)
